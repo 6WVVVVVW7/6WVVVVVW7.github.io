@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Temple of Anx</title>
+    <link href="https://fonts.googleapis.com/css2?family=El+Messiri&family=Lexend+Giga&display=swap" rel="stylesheet">
+    <style>
+        body {
+            display: flex;
+            font-family: 'El Messiri', sans-serif;
+            background-color: black;
+            color: white;
+            margin: 0;
+        }
+        .sidebar {
+            width: 250px;
+            background: #222;
+            padding: 15px;
+            overflow-y: auto;
+            height: 100vh;
+        }
+        .sidebar a {
+            display: block;
+            color: white;
+            text-decoration: none;
+            padding: 5px 10px;
+        }
+        .sidebar a:hover {
+            background: #444;
+        }
+        .content {
+            flex: 1;
+            padding: 20px;
+            text-align: center;
+        }
+        .entry-container {
+            background: beige;
+            color: black;
+            padding: 20px;
+            border-radius: 10px;
+            margin: auto;
+            max-width: 700px;
+            text-align: left;
+            overflow: auto;
+            max-height: 400px;
+        }
+        .entry-container pre {
+            white-space: pre-wrap;
+        }
+        .title {
+            font-family: 'Lexend Giga', sans-serif;
+            text-align: center;
+            font-size: 32px;
+            margin-bottom: 20px;
+        }
+    </style>
+    <script>
+        async function loadEntries() {
+            const response = await fetch('/entries');
+            const entries = await response.json();
+            const sidebar = document.getElementById('sidebar');
+            sidebar.innerHTML = '';
+            
+            function createFolderStructure(entries, parentElement) {
+                Object.keys(entries).sort().forEach(key => {
+                    const item = entries[key];
+                    const folder = document.createElement('div');
+                    
+                    if (typeof item === 'string') {
+                        const link = document.createElement('a');
+                        link.href = `#${item}`;
+                        link.textContent = key;
+                        link.onclick = () => loadEntry(item);
+                        folder.appendChild(link);
+                    } else {
+                        const subFolder = document.createElement('details');
+                        const summary = document.createElement('summary');
+                        summary.textContent = key;
+                        subFolder.appendChild(summary);
+                        createFolderStructure(item, subFolder);
+                        folder.appendChild(subFolder);
+                    }
+                    parentElement.appendChild(folder);
+                });
+            }
+            createFolderStructure(entries, sidebar);
+        }
+        
+        async function loadEntry(fileName) {
+            const response = await fetch(`/entry/${fileName}`);
+            const text = await response.text();
+            const content = document.getElementById('content');
+            const formattedText = text.split('\n').map((line, index) => `${index + 1}: ${line}`).join('\n');
+            content.innerHTML = `<div class='entry-container'><pre>${formattedText}</pre></div>`;
+        }
+        
+        window.onload = loadEntries;
+    </script>
+</head>
+<body>
+    <div class="sidebar" id="sidebar"></div>
+    <div class="content">
+        <div class="title">TEMPLE OF ANX</div>
+        <div id="content">Select an entry from the sidebar.</div>
+    </div>
+</body>
+</html>
