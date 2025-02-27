@@ -58,7 +58,7 @@
     <script>
         async function loadEntries() {
             try {
-                const response = await fetch('/entries');
+                const response = await fetch('/TEXT');
                 if (!response.ok) throw new Error('Failed to load entries');
                 const files = await response.json();
                 if (!Array.isArray(files) || files.length === 0) {
@@ -95,7 +95,7 @@
         
         async function loadEntry(fileName) {
             try {
-                const response = await fetch(`/entry/${fileName}`);
+                const response = await fetch(`/TEXT/${fileName}`);
                 if (!response.ok) throw new Error('Failed to load entry');
                 const text = await response.text();
                 const content = document.getElementById('content');
