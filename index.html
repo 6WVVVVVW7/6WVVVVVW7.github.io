@@ -3,66 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TEMPLE OF ANX</title>
+    <title>Temple of Anx</title>
     <style>
-        @font-face {
-            font-family: 'EsotericFont';
-            src: url('esoteric-font.ttf'); /* Add a suitable esoteric font */
-        }
         body {
-            background: url('bg-tile.gif') repeat;
-            color: #00ff00;
-            font-family: "Courier New", monospace;
+            margin: 0;
+            overflow: hidden;
+            background-color: black;
+            color: white;
+            font-family: 'Arial', sans-serif;
             text-align: center;
         }
+        .overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+        }
         h1 {
-            font-family: 'EsotericFont', fantasy;
-            font-size: 50px;
-            margin-top: 20px;
-            text-shadow: 4px 4px 8px black;
+            font-size: 3rem;
         }
-        .nav {
+        .nav-links {
             margin-top: 20px;
         }
-        .nav a {
-            color: #ff00ff;
-            font-size: 20px;
+        .nav-links a {
+            color: white;
             text-decoration: none;
-            padding: 10px;
-            display: inline-block;
-            border: 2px solid #ff00ff;
-            background: black;
+            font-size: 1.5rem;
+            margin: 0 15px;
         }
-        .nav a:hover {
-            background: #ff00ff;
-            color: black;
-        }
-        .marquee {
-            font-size: 14px;
-            color: cyan;
-            margin-top: 10px;
-        }
-        .counter {
-            margin-top: 20px;
+        canvas {
+            display: block;
         }
     </style>
 </head>
 <body>
-    <h1>TEMPLE OF ANX</h1>
-    <marquee class="marquee">ENTER THE PORTAL OF KNOWLEDGE AND UNVEIL THE SECRETS</marquee>
-    
-    <div class="nav">
-        <a href="about.html">ABOUT</a>
-        <a href="teachings.html">TEACHINGS</a>
-        <a href="connect.html">CONNECT</a>
+    <div class="overlay">
+        <h1>Temple of Anx</h1>
+        <div id="sigil"></div>
+        <div class="nav-links">
+            <a href="mailto:TempleOfAnx@proton.me">Connect</a>
+            <a href="learn.html">Learn</a>
+        </div>
     </div>
     
-    <div class="counter">
-        <p>YOU ARE VISITOR # <img src="counter.gif" alt="visitor count"></p>
-    </div>
-    
-    <div>
-        <img src="mystic-eye.gif" alt="Mystic Eye GIF">
-    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // Background with shimmering liquid effect
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        const geometry = new THREE.PlaneGeometry(10, 10, 100, 100);
+        const material = new THREE.ShaderMaterial({
+            uniforms: {
+                time: { value: 0 }
+            },
+            vertexShader: `
+                varying vec2 vUv;
+                void main() {
+                    vUv = uv;
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                }
+            `,
+            fragmentShader: `
+                uniform float time;
+                varying vec2 vUv;
+                void main() {
+                    float wave = sin(vUv.x * 10.0 + time) * cos(vUv.y * 10.0 + time) * 0.1;
+                    gl_FragColor = vec4(vec3(0.1, 0.1, 0.1) + wave, 1.0);
+                }
+            `
+        });
+
+        const plane = new THREE.Mesh(geometry, material);
+        plane.rotation.x = -Math.PI / 2;
+        scene.add(plane);
+
+        camera.position.y = 2;
+        camera.lookAt(plane.position);
+
+        function animate() {
+            material.uniforms.time.value += 0.02;
+            renderer.render(scene, camera);
+            requestAnimationFrame(animate);
+        }
+        animate();
+    </script>
+    <script>
+        // Create a transitioning sigil between a septagon and an 11-pointed star
+        const sigilScene = new THREE.Scene();
+        const sigilCamera = new THREE.PerspectiveCamera(50, 1, 0.1, 1000);
+        const sigilRenderer = new THREE.WebGLRenderer({ alpha: true });
+        sigilRenderer.setSize(300, 300);
+        document.getElementById('sigil').appendChild(sigilRenderer.domElement);
+
+        const sigilGeometry = new THREE.CircleGeometry(1, 7);
+        const sigilMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
+        const sigilMesh = new THREE.LineLoop(sigilGeometry, sigilMaterial);
+        sigilScene.add(sigilMesh);
+        sigilCamera.position.z = 3;
+
+        let step = 0;
+        function animateSigil() {
+            step += 0.02;
+            let points = step % (Math.PI * 2) < Math.PI ? 7 : 11;
+            sigilMesh.geometry.dispose();
+            sigilMesh.geometry = new THREE.CircleGeometry(1, points);
+            sigilRenderer.render(sigilScene, sigilCamera);
+            requestAnimationFrame(animateSigil);
+        }
+        animateSigil();
+    </script>
 </body>
 </html>
