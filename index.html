@@ -5,13 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TEMPLE OF ANX</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Cardo:wght@700&display=swap');
         body {
             margin: 0;
             overflow: hidden;
             background-color: black;
             color: white;
-            font-family: 'UnifrakturCook', cursive;
+            font-family: 'Cardo', serif;
             text-align: center;
         }
         .overlay {
@@ -51,63 +51,18 @@
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
-        // Background with shimmering liquid effect
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.appendChild(renderer.domElement);
-
-        const geometry = new THREE.PlaneGeometry(10, 10, 100, 100);
-        const material = new THREE.ShaderMaterial({
-            uniforms: {
-                time: { value: 0 }
-            },
-            vertexShader: `
-                varying vec2 vUv;
-                void main() {
-                    vUv = uv;
-                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-                }
-            `,
-            fragmentShader: `
-                uniform float time;
-                varying vec2 vUv;
-                void main() {
-                    float wave = sin(vUv.x * 10.0 + time) * cos(vUv.y * 10.0 + time) * 0.1;
-                    gl_FragColor = vec4(vec3(0.1, 0.1, 0.1) + wave, 1.0);
-                }
-            `
-        });
-
-        const plane = new THREE.Mesh(geometry, material);
-        plane.rotation.x = -Math.PI / 2;
-        scene.add(plane);
-
-        camera.position.y = 2;
-        camera.lookAt(plane.position);
-
-        function animate() {
-            material.uniforms.time.value += 0.02;
-            renderer.render(scene, camera);
-            requestAnimationFrame(animate);
-        }
-        animate();
-    </script>
-    <script>
-        // Create an 11-sided polygon with an interconnected asymmetric 7-pointed star
+        // Create a rotating 7-pointed star inscribed in a circle
         const sigilScene = new THREE.Scene();
         const sigilCamera = new THREE.PerspectiveCamera(50, 1, 0.1, 1000);
         const sigilRenderer = new THREE.WebGLRenderer({ alpha: true });
         sigilRenderer.setSize(300, 300);
         document.getElementById('sigil').appendChild(sigilRenderer.domElement);
 
-        function createSigil() {
+        function createSevenPointedStar() {
             const points = [];
-            for (let i = 0; i < 11; i++) {
-                const angle = (i / 11) * Math.PI * 2;
-                const radius = i % 2 === 0 ? 1 : 0.6;
-                points.push(new THREE.Vector2(Math.cos(angle) * radius, Math.sin(angle) * radius));
+            for (let i = 0; i < 7; i++) {
+                const angle = (i / 7) * Math.PI * 2;
+                points.push(new THREE.Vector2(Math.cos(angle), Math.sin(angle)));
             }
             const shape = new THREE.Shape(points);
             const geometry = new THREE.ShapeGeometry(shape);
@@ -115,12 +70,12 @@
             return new THREE.LineLoop(geometry, material);
         }
 
-        let sigilMesh = createSigil();
+        let sigilMesh = createSevenPointedStar();
         sigilScene.add(sigilMesh);
         sigilCamera.position.z = 3;
 
         function animateSigil() {
-            sigilMesh.rotation.z += 0.01;
+            sigilMesh.rotation.z += 0.005;
             sigilRenderer.render(sigilScene, sigilCamera);
             requestAnimationFrame(animateSigil);
         }
