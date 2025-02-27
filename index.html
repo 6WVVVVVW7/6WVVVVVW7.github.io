@@ -58,24 +58,34 @@
         sigilRenderer.setSize(300, 300);
         document.getElementById('sigil').appendChild(sigilRenderer.domElement);
 
-        function createSevenPointedStar() {
+        function createHeptagram() {
             const points = [];
+            const radius = 1;
             for (let i = 0; i < 7; i++) {
-                const angle = (i / 7) * Math.PI * 2;
-                points.push(new THREE.Vector2(Math.cos(angle), Math.sin(angle)));
+                let angle = (i * 4) % 7 * (Math.PI * 2 / 7); // Correct heptagram point order
+                points.push(new THREE.Vector2(Math.cos(angle) * radius, Math.sin(angle) * radius));
             }
-            const shape = new THREE.Shape(points);
-            const geometry = new THREE.ShapeGeometry(shape);
+            const geometry = new THREE.BufferGeometry().setFromPoints(points.concat(points[0]));
             const material = new THREE.LineBasicMaterial({ color: 0xffffff });
-            return new THREE.LineLoop(geometry, material);
+            return new THREE.Line(geometry, material);
         }
 
-        let sigilMesh = createSevenPointedStar();
-        sigilScene.add(sigilMesh);
+        function createCircle() {
+            const circleGeometry = new THREE.CircleGeometry(1.1, 64);
+            const circleMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
+            return new THREE.LineLoop(circleGeometry, circleMaterial);
+        }
+
+        let heptagram = createHeptagram();
+        let circle = createCircle();
+
+        sigilScene.add(heptagram);
+        sigilScene.add(circle);
         sigilCamera.position.z = 3;
 
         function animateSigil() {
-            sigilMesh.rotation.z += 0.005;
+            heptagram.rotation.z += 0.005;
+            circle.rotation.z += 0.005;
             sigilRenderer.render(sigilScene, sigilCamera);
             requestAnimationFrame(animateSigil);
         }
