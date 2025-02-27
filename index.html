@@ -5,13 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TEMPLE OF ANX</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:wght@700&family=Uncial+Antiqua&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Lexend+Giga&display=swap');
         body {
             margin: 0;
             overflow: hidden;
             background-color: black;
             color: white;
-            font-family: 'EB Garamond', serif;
+            font-family: 'Lexend Giga', sans-serif;
             text-align: center;
         }
         .overlay {
@@ -24,7 +24,6 @@
         h1 {
             font-size: 3rem;
             text-transform: uppercase;
-            font-family: 'Uncial Antiqua', cursive;
         }
         .nav-links {
             margin-top: 20px;
@@ -62,50 +61,6 @@
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
-        // Background with shimmering liquid effect
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.appendChild(renderer.domElement);
-
-        const geometry = new THREE.PlaneGeometry(10, 10, 100, 100);
-        const material = new THREE.ShaderMaterial({
-            uniforms: {
-                time: { value: 0 }
-            },
-            vertexShader: `
-                varying vec2 vUv;
-                void main() {
-                    vUv = uv;
-                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-                }
-            `,
-            fragmentShader: `
-                uniform float time;
-                varying vec2 vUv;
-                void main() {
-                    float wave = sin(vUv.x * 10.0 + time) * cos(vUv.y * 10.0 + time) * 0.1;
-                    gl_FragColor = vec4(vec3(0.1, 0.1, 0.1) + wave, 1.0);
-                }
-            `
-        });
-
-        const plane = new THREE.Mesh(geometry, material);
-        plane.rotation.x = -Math.PI / 2;
-        scene.add(plane);
-
-        camera.position.y = 2;
-        camera.lookAt(plane.position);
-
-        function animate() {
-            material.uniforms.time.value += 0.02;
-            renderer.render(scene, camera);
-            requestAnimationFrame(animate);
-        }
-        animate();
-    </script>
-    <script>
         // Rotating 7-pointed star with offset circles
         const sigilScene = new THREE.Scene();
         const sigilCamera = new THREE.PerspectiveCamera(50, 1, 0.1, 1000);
@@ -125,15 +80,15 @@
             return new THREE.Line(geometry, material);
         }
 
-        function createCircle(radius) {
-            const circleGeometry = new THREE.CircleGeometry(radius, 64);
+        function createCircle(radius, segments) {
+            const circleGeometry = new THREE.CircleGeometry(radius, segments);
             const circleMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
             return new THREE.LineLoop(circleGeometry, circleMaterial);
         }
 
         let heptagram = createHeptagram();
-        let innerCircle = createCircle(1.1);
-        let outerCircle = createCircle(1.3);
+        let innerCircle = createCircle(1.05, 77);
+        let outerCircle = createCircle(1.3, 77);
         
         sigilScene.add(heptagram);
         sigilScene.add(innerCircle);
