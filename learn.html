@@ -57,35 +57,53 @@
     </style>
     <script>
         async function loadEntries() {
-            const response = await fetch('/entries');
-            const files = await response.json();
-            const sidebar = document.getElementById('sidebar');
-            sidebar.innerHTML = '';
-            
-            function parseFileName(fileName) {
-                const match = fileName.match(/(\d{2})_(\d{2})?_?(.*)\.txt/);
-                if (!match) return fileName;
-                const section = match[1];
-                const subsection = match[2] ? `:${match[2]}` : '';
-                const title = match[3].replace(/_/g, ' ');
-                return `${section}${subsection} | ${title}`;
+            try {
+                const response = await fetch('/entries');
+                if (!response.ok) throw new Error('Failed to load entries');
+                const files = await response.json();
+                if (!Array.isArray(files) || files.length === 0) {
+                    document.getElementById('sidebar').innerHTML = '<p>No files found</p>';
+                    return;
+                }
+                
+                const sidebar = document.getElementById('sidebar');
+                sidebar.innerHTML = '';
+                
+                function parseFileName(fileName) {
+                    const match = fileName.match(/(\d{2})_(\d{2})?_?(.*)\.txt/);
+                    if (!match) return fileName;
+                    const section = match[1];
+                    const subsection = match[2] ? `:${match[2]}` : '';
+                    const title = match[3].replace(/_/g, ' ');
+                    return `${section}${subsection} | ${title}`;
+                }
+                
+                files.sort().forEach(file => {
+                    const link = document.createElement('a');
+                    link.href = `#${file}`;
+                    link.textContent = parseFileName(file);
+                    link.onclick = (event) => {
+                        event.preventDefault();
+                        loadEntry(file);
+                    };
+                    sidebar.appendChild(link);
+                });
+            } catch (error) {
+                document.getElementById('sidebar').innerHTML = `<p>Error loading files: ${error.message}</p>`;
             }
-            
-            files.sort().forEach(file => {
-                const link = document.createElement('a');
-                link.href = `#${file}`;
-                link.textContent = parseFileName(file);
-                link.onclick = () => loadEntry(file);
-                sidebar.appendChild(link);
-            });
         }
         
         async function loadEntry(fileName) {
-            const response = await fetch(`/entry/${fileName}`);
-            const text = await response.text();
-            const content = document.getElementById('content');
-            const formattedText = text.split('\n').map((line, index) => `${index + 1}: ${line}`).join('\n');
-            content.innerHTML = `<div class='entry-container'><pre>${formattedText}</pre></div>`;
+            try {
+                const response = await fetch(`/entry/${fileName}`);
+                if (!response.ok) throw new Error('Failed to load entry');
+                const text = await response.text();
+                const content = document.getElementById('content');
+                const formattedText = text.split('\n').map((line, index) => `${index + 1}: ${line}`).join('\n');
+                content.innerHTML = `<div class='entry-container'><pre>${formattedText}</pre></div>`;
+            } catch (error) {
+                document.getElementById('content').innerHTML = `<p>Error loading entry: ${error.message}</p>`;
+            }
         }
         
         window.onload = loadEntries;
