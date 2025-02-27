@@ -58,33 +58,26 @@
     <script>
         async function loadEntries() {
             const response = await fetch('/entries');
-            const entries = await response.json();
+            const files = await response.json();
             const sidebar = document.getElementById('sidebar');
             sidebar.innerHTML = '';
             
-            function createFolderStructure(entries, parentElement) {
-                Object.keys(entries).sort().forEach(key => {
-                    const item = entries[key];
-                    const folder = document.createElement('div');
-                    
-                    if (typeof item === 'string') {
-                        const link = document.createElement('a');
-                        link.href = `#${item}`;
-                        link.textContent = key;
-                        link.onclick = () => loadEntry(item);
-                        folder.appendChild(link);
-                    } else {
-                        const subFolder = document.createElement('details');
-                        const summary = document.createElement('summary');
-                        summary.textContent = key;
-                        subFolder.appendChild(summary);
-                        createFolderStructure(item, subFolder);
-                        folder.appendChild(subFolder);
-                    }
-                    parentElement.appendChild(folder);
-                });
+            function parseFileName(fileName) {
+                const match = fileName.match(/(\d{2})_(\d{2})?_?(.*)\.txt/);
+                if (!match) return fileName;
+                const section = match[1];
+                const subsection = match[2] ? `:${match[2]}` : '';
+                const title = match[3].replace(/_/g, ' ');
+                return `${section}${subsection} | ${title}`;
             }
-            createFolderStructure(entries, sidebar);
+            
+            files.sort().forEach(file => {
+                const link = document.createElement('a');
+                link.href = `#${file}`;
+                link.textContent = parseFileName(file);
+                link.onclick = () => loadEntry(file);
+                sidebar.appendChild(link);
+            });
         }
         
         async function loadEntry(fileName) {
