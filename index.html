@@ -106,12 +106,24 @@
         animate();
     </script>
     <script>
-        // Adjusted rotating 7-pointed star inscribed in two circles, centered properly
+        // Rotating 7-pointed star with offset circles
         const sigilScene = new THREE.Scene();
         const sigilCamera = new THREE.PerspectiveCamera(50, 1, 0.1, 1000);
         const sigilRenderer = new THREE.WebGLRenderer({ alpha: true });
         sigilRenderer.setSize(300, 300);
         document.getElementById('sigil').appendChild(sigilRenderer.domElement);
+
+        function createHeptagram() {
+            const points = [];
+            const radius = 1;
+            for (let i = 0; i < 7; i++) {
+                let angle = (i * 4) % 7 * (Math.PI * 2 / 7);
+                points.push(new THREE.Vector2(Math.cos(angle) * radius, Math.sin(angle) * radius));
+            }
+            const geometry = new THREE.BufferGeometry().setFromPoints(points.concat(points[0]));
+            const material = new THREE.LineBasicMaterial({ color: 0xffffff });
+            return new THREE.Line(geometry, material);
+        }
 
         function createCircle(radius) {
             const circleGeometry = new THREE.CircleGeometry(radius, 64);
@@ -119,7 +131,7 @@
             return new THREE.LineLoop(circleGeometry, circleMaterial);
         }
 
-        let heptagram = createCircle(1);
+        let heptagram = createHeptagram();
         let innerCircle = createCircle(1.1);
         let outerCircle = createCircle(1.3);
         
