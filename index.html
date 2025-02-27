@@ -60,46 +60,78 @@
             <a href="mailto:TempleOfAnx@proton.me">Connect</a>
         </div>
     </div>
-    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
-        // Adjusted rotating 7-pointed star inscribed in a circle, centered properly
+        // Background with shimmering liquid effect
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        const geometry = new THREE.PlaneGeometry(10, 10, 100, 100);
+        const material = new THREE.ShaderMaterial({
+            uniforms: {
+                time: { value: 0 }
+            },
+            vertexShader: `
+                varying vec2 vUv;
+                void main() {
+                    vUv = uv;
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                }
+            `,
+            fragmentShader: `
+                uniform float time;
+                varying vec2 vUv;
+                void main() {
+                    float wave = sin(vUv.x * 10.0 + time) * cos(vUv.y * 10.0 + time) * 0.1;
+                    gl_FragColor = vec4(vec3(0.1, 0.1, 0.1) + wave, 1.0);
+                }
+            `
+        });
+
+        const plane = new THREE.Mesh(geometry, material);
+        plane.rotation.x = -Math.PI / 2;
+        scene.add(plane);
+
+        camera.position.y = 2;
+        camera.lookAt(plane.position);
+
+        function animate() {
+            material.uniforms.time.value += 0.02;
+            renderer.render(scene, camera);
+            requestAnimationFrame(animate);
+        }
+        animate();
+    </script>
+    <script>
+        // Adjusted rotating 7-pointed star inscribed in two circles, centered properly
         const sigilScene = new THREE.Scene();
         const sigilCamera = new THREE.PerspectiveCamera(50, 1, 0.1, 1000);
         const sigilRenderer = new THREE.WebGLRenderer({ alpha: true });
         sigilRenderer.setSize(300, 300);
         document.getElementById('sigil').appendChild(sigilRenderer.domElement);
 
-        function createHeptagram() {
-            const points = [];
-            const radius = 1;
-            for (let i = 0; i < 7; i++) {
-                let angle = (i * 4) % 7 * (Math.PI * 2 / 7);
-                points.push(new THREE.Vector2(Math.cos(angle) * radius, Math.sin(angle) * radius));
-            }
-            const geometry = new THREE.BufferGeometry().setFromPoints(points.concat(points[0]));
-            const material = new THREE.LineBasicMaterial({ color: 0xffffff });
-            return new THREE.Line(geometry, material);
-        }
-
-        function createCircle() {
-            const circleGeometry = new THREE.CircleGeometry(1.1, 64);
+        function createCircle(radius) {
+            const circleGeometry = new THREE.CircleGeometry(radius, 64);
             const circleMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
             return new THREE.LineLoop(circleGeometry, circleMaterial);
         }
 
-        let heptagram = createHeptagram();
-        let circle = createCircle();
-        heptagram.position.set(0, 0, 0);
-        circle.position.set(0, 0, 0);
-
+        let heptagram = createCircle(1);
+        let innerCircle = createCircle(1.1);
+        let outerCircle = createCircle(1.3);
+        
         sigilScene.add(heptagram);
-        sigilScene.add(circle);
+        sigilScene.add(innerCircle);
+        sigilScene.add(outerCircle);
         sigilCamera.position.z = 3;
 
         function animateSigil() {
             heptagram.rotation.z += 0.005;
-            circle.rotation.z += 0.005;
+            innerCircle.rotation.z += 0.005;
+            outerCircle.rotation.z += 0.005;
             sigilRenderer.render(sigilScene, sigilCamera);
             requestAnimationFrame(animateSigil);
         }
