@@ -19,14 +19,16 @@
             padding: 15px;
             overflow-y: auto;
             height: 100vh;
+            transition: 0.3s;
         }
         .sidebar a {
             display: block;
             color: white;
             text-decoration: none;
             padding: 5px 10px;
+            transition: background 0.3s;
         }
-        .sidebar a:hover {
+        .sidebar a:hover, .sidebar a.active {
             background: #444;
         }
         .content {
@@ -69,38 +71,55 @@
                 const sidebar = document.getElementById('sidebar');
                 sidebar.innerHTML = '';
                 
-                function parseFileName(fileName) {
-                    const match = fileName.match(/(\d{2})_(\d{2})?_?(.*)\.txt/);
-                    if (!match) return fileName;
-                    const section = match[1];
-                    const subsection = match[2] ? `:${match[2]}` : '';
-                    const title = match[3].replace(/_/g, ' ');
-                    return `${section}${subsection} | ${title}`;
-                }
+                const fileMap = {};
+                files.forEach(file => {
+                    const match = file.match(/(\d{2})_(\d{2})?_?(.*)\.txt/);
+                    if (match) {
+                        const section = match[1];
+                        const subsection = match[2];
+                        const title = match[3].replace(/_/g, ' ');
+                        if (!fileMap[section]) fileMap[section] = {};
+                        fileMap[section][subsection || ""] = { file, title };
+                    }
+                });
                 
-                files.sort().forEach(file => {
-                    const link = document.createElement('a');
-                    link.href = `#${file}`;
-                    link.textContent = parseFileName(file);
-                    link.onclick = (event) => {
-                        event.preventDefault();
-                        loadEntry(file);
-                    };
-                    sidebar.appendChild(link);
+                Object.keys(fileMap).sort().forEach(section => {
+                    const sectionContainer = document.createElement('div');
+                    sectionContainer.innerHTML = `<strong>${section}</strong>`;
+                    sidebar.appendChild(sectionContainer);
+                    
+                    Object.keys(fileMap[section]).sort().forEach(subsection => {
+                        const { file, title } = fileMap[section][subsection];
+                        const link = document.createElement('a');
+                        link.href = `#${file}`;
+                        link.textContent = subsection ? `→ ${section}:${subsection} | ${title}` : `${section} | ${title}`;
+                        link.onclick = (event) => {
+                            event.preventDefault();
+                            loadEntry(file, link);
+                        };
+                        sidebar.appendChild(link);
+                    });
                 });
             } catch (error) {
                 document.getElementById('sidebar').innerHTML = `<p>Error loading files: ${error.message}</p>`;
             }
         }
         
-        async function loadEntry(fileName) {
+        async function loadEntry(fileName, clickedLink) {
             try {
+                document.querySelectorAll('.sidebar a').forEach(link => link.classList.remove('active'));
+                clickedLink.classList.add('active');
+                
                 const response = await fetch(`TEXT/${fileName}`);
                 if (!response.ok) throw new Error('Failed to load entry');
                 const text = await response.text();
+                
+                const match = fileName.match(/(\d{2})_(\d{2})?_?(.*)\.txt/);
+                const title = match ? `${match[1]}${match[2] ? `:${match[2]}` : ''} | ${match[3].replace(/_/g, ' ')}` : fileName;
+                
                 const content = document.getElementById('content');
                 const formattedText = text.split('\n').map((line, index) => `${index + 1}: ${line}`).join('\n');
-                content.innerHTML = `<div class='entry-container'><pre>${formattedText}</pre></div>`;
+                content.innerHTML = `<div class='entry-container'><h3>${title}</h3><pre>${formattedText}</pre></div>`;
             } catch (error) {
                 document.getElementById('content').innerHTML = `<p>Error loading entry: ${error.message}</p>`;
             }
